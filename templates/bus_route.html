@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>세종시 행정동 지도 및 버스 경로</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.1/papaparse.min.js"></script>
+    <style>
+        #map {
+            height: 90vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>세종시 행정동 지도 및 버스 경로</h1>
+    <div id="map"></div>
+
+    <script>
+        // 지도 생성
+        const map = L.map('map').setView([36.5, 127.3], 11); // 세종시 중심 좌표
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // GeoJSON 파일 추가
+        fetch('행정동_ver20230701.geojson')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    style: {
+                        color: 'black',
+                        weight: 1,
+                        fillColor: '#ffffff',
+                        fillOpacity: 0.6
+                    },
+                    onEachFeature: function (feature, layer) {
+                        if (feature.properties && feature.properties.adm_nm) {
+                            const shortName = feature.properties.adm_nm.replace("세종특별자치시 세종시 ", "");
+                            layer.bindPopup(shortName);
+                        }
+                    }
+                }).addTo(map);
+            });
+
+        // 버스 경로 색상 목록
+        const colors = ['#d65db1', '#0089ba', '#845ec2', '#00c9a7', '#ff8299', '#ffc75f', '#ff8066'];
+
+        // 버스 경로 추가 함수
+        function addBusRoute(filePath, color) {
+            Papa.parse(filePath, {
+                download: true,
+                header: true,
+                complete: function (results) {
+                    const data = results.data.filter(row => row.GPS_X && row.GPS_Y);
+                    const latlngs = data.map(row => [parseFloat(row.GPS_Y), parseFloat(row.GPS_X)]);
+                    L.polyline(latlngs, {
+                        color: color,
+                        weight: 3
+                    }).addTo(map).bindPopup(filePath.split('/').pop().split('(')[0] + " 버스 경로");
+                }
+            });
+        }
+
+        // 버스 경로 파일 목록
+        const busFiles = [
+            "11번(조치원버스터미널~조치원버스터미널).csv",
+            "12번(조치원버스터미널~조치원버스터미널).csv",
+            "13번(조치원역~조치원역).csv",
+            "16-1번(은하수공원~조치원터미널).csv",
+            "16번(조치원역~은하수공원).csv",
+            "17-1번(보통1리마을회관~조치원터미널).csv",
+            "17번(조치원터미널~보통1리마을회관).csv"
+        ];
+
+        // 각 버스 경로 지도에 추가
+        busFiles.forEach((filePath, index) => {
+            addBusRoute(filePath, colors[index % colors.length]);
+        });
+    </script>
+</body>
+</html>

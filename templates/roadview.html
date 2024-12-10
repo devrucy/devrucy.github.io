@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로드뷰</title>
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
+    <style>
+        #roadview {
+            width: 100%;
+            height: 100%;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="roadview"></div>
+    <script>
+        var container = document.getElementById('roadview');
+        var position = new kakao.maps.LatLng({{ latitude }}, {{ longitude }});
+        var roadview = new kakao.maps.Roadview(container);
+        var roadviewClient = new kakao.maps.RoadviewClient();
+
+        roadviewClient.getNearestPanoId(position, 50, function(panoId) {
+            if (!panoId) {
+                alert('로드뷰 파노라마를 찾을 수 없습니다.');
+            } else {
+                roadview.setPanoId(panoId, position);
+            }
+        });
+    </script>
+</body>
+</html>

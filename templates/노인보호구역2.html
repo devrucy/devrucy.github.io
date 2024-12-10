@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>세종시 노인보호구역</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans', sans-serif;
+    }
+    #map {
+      height: calc(100vh - 150px);
+      margin-bottom: 20px;
+      border: 5px solid black;
+      transition: box-shadow 0.5s, border-color 0.5s;
+    }
+    body.dark-mode #map {
+      border-color: transparent;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.7);
+    }
+    .zone-card {
+      margin-bottom: 20px;
+      transition: background-color 0.5s, border 0.5s, box-shadow 0.5s;
+    }
+    .zone-card.highlight {
+      border: 2px solid blue;
+      background-color: #f0f8ff;
+      box-shadow: 0 0 15px rgba(0, 0, 255, 0.5);
+    }
+    body.dark-mode {
+      background-color: #121212;
+      color: #f0f0f0;
+    }
+    body.dark-mode .card {
+      background-color: #1e1e1e;
+      color: #f0f0f0;
+    }
+    @media (max-width: 768px) {
+      #map {
+        height: 300px;
+      }
+      .zone-card {
+        margin-bottom: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    <header class="mb-4 text-center">
+      <h1 class="text-primary">세종시 노인보호구역 현황</h1>
+      <p>노인의 안전한 보행을 위해</p>
+      <div class="input-group mb-3">
+        <input type="text" class="form-control" id="search" placeholder="검색 예: 밀마루복지마을">
+        <button class="btn btn-primary" id="search-btn">검색</button>
+        <button class="btn btn-dark" id="toggle-dark-mode">다크 모드</button>
+      </div>
+    </header>
+
+    <div id="map"></div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4" id="zone-list">
+      <!-- 보호구역 카드가 여기에 추가됩니다 -->
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // 지도 초기화
+    const map = L.map('map').setView([36.50972725, 127.2591418], 12);
+
+    // 라이트 모드 타일
+    const lightTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map);
+
+    // 다크 모드 타일
+    const darkTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+    });
+
+    let isDarkMode = false;
+
+    // 커스텀 아이콘
+    const customIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/128/3536/3536106.png',
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+      popupAnchor: [0, -30],
+    });
+
+    // 세종시 경계선 표시
+    fetch('행정동_ver20230701.geojson')
+      .then(response => response.json())
+      .then(data => {
+        const boundaryLayer = L.geoJSON(data, {
+          style: {
+            color: 'gray',
+            weight: 2,
+            opacity: 0.8
+          }
+        }).addTo(map);
+        map.fitBounds(boundaryLayer.getBounds());
+      })
+      .catch(error => console.error('GeoJSON 데이터를 불러오는 중 오류:', error));
+
+    // 보호구역 데이터
+    const zones = [
+      { name: "밀마루복지마을", address: "세종특별자치시 보듬1로 16", lat: 36.50972725, lon: 127.2591418, population: 500, accidents: 3 },
+      //... 추가 데이터
+    ];
+
+    zones.forEach((zone, index) => {
+      const marker = L.marker([zone.lat, zone.lon], { icon: customIcon }).addTo(map);
+      marker.bindPopup(`<b>${zone.name}</b><br>주소: ${zone.address}<br>노인 인구: ${zone.population}명<br>사고 건수: ${zone.accidents}건`);
+      L.circle([zone.lat, zone.lon], { color: 'blue', radius: 300 }).addTo(map);
+    });
+
+    // 사고다발지역
+    const accidentZones = [
+      { name: "조치원읍 (- 인근)", lat: 36.601594, lon: 127.298955 },
+      // ...추가 데이터
+    ];
+
+    accidentZones.forEach(zone => {
+      L.marker([zone.lat, zone.lon], { icon: customIcon }).addTo(map).bindPopup(`<b>${zone.name}</b> 사고다발 지역`);
+    });
+
+    // 검색 및 다크모드 기능 유지
+  </script>
+</body>
+</html>

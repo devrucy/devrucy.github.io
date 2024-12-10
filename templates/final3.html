@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>세종시 노인보호구역</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans', sans-serif;
+    }
+    #map {
+      height: calc(100vh - 150px);
+      margin-bottom: 20px;
+    }
+    .zone-card {
+      margin-bottom: 20px;
+      transition: background-color 0.5s, border 0.5s;
+    }
+    .zone-card.highlight {
+      border: 2px solid blue;
+      background-color: #f0f8ff;
+    }
+    body.dark-mode {
+      background-color: #121212;
+      color: #f0f0f0;
+    }
+    body.dark-mode .card {
+      background-color: #1e1e1e;
+      color: #f0f0f0;
+    }
+    @media (max-width: 768px) {
+      #map {
+        height: 300px;
+      }
+      .zone-card {
+        margin-bottom: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    <header class="mb-4 text-center">
+      <h1 class="text-primary">세종시 노인보호구역 현황</h1>
+      <p>현재 보호구역으로 지정된 곳</p>
+      <div class="input-group mb-3">
+        <input type="text" class="form-control" id="search" placeholder="검색 예: 밀마루복지마을">
+        <button class="btn btn-primary" id="search-btn">검색</button>
+        <button class="btn btn-dark" id="toggle-dark-mode">다크 모드</button>
+      </div>
+    </header>
+
+    <div id="map"></div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4" id="zone-list">
+      <!-- 카드 레이아웃으로 보호구역 표시 -->
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // 지도 초기화
+    const map = L.map('map').setView([36.50972725, 127.2591418], 12);
+
+    // 커스텀 지도 타일
+    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 18,
+    }).addTo(map);
+
+    // 검색 버튼 커스텀 컨트롤 생성
+const SearchButtonControl = L.Control.extend({
+  options: {
+    position: 'topright', // 버튼 위치 (우측 상단)
+  },
+  onAdd: function () {
+    // 버튼 생성
+    const container = L.DomUtil.create('button', 'leaflet-bar leaflet-control leaflet-control-custom');
+    container.innerHTML = '<i class="bi bi-search"></i>'; // 아이콘 (Bootstrap 사용)
+    container.title = "새로운 창에서 검색";
+    container.style.backgroundColor = 'white';
+    container.style.width = '40px';
+    container.style.height = '40px';
+    container.style.cursor = 'pointer';
+
+    // 버튼 클릭 이벤트 추가
+    container.onclick = function () {
+      const searchURL = '/search'; // 검색 결과 페이지 URL
+      window.open(searchURL, 'search.html'); // 새 창 열기
+    };
+
+    return container;
+  },
+});
+
+// 지도에 검색 버튼 추가
+map.addControl(new SearchButtonControl());
+
+    // 커스텀 아이콘
+    const customIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/128/10740/10740584.png', // Replace with your icon URL
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+      popupAnchor: [0, -30],
+    });
+
+    // 보호구역 데이터
+    const zones = [
+      { name: "밀마루복지마을", address: "세종특별자치시 보듬1로 16", lat: 36.50972725, lon: 127.2591418, population: 500, accidents: 3 },
+      { name: "전의복지회관", address: "세종특별자치시 전의면 동신길 10", lat: 36.67989279, lon: 127.2085989, population: 450, accidents: 2 },
+      { name: "송학2리 노인복지관", address: "세종특별자치시 장군면 의당전의로 712", lat: 36.53916873, lon: 127.1908696, population: 600, accidents: 4 },
+      { name: "세종경로당", address: "세종특별자치시 조치원읍 새내10길 96, (명리)", lat: 36.60069182, lon: 127.3034413, population: 400, accidents: 1 },
+      { name: "세종노인복지센터", address: "세종특별자치시 조치원읍 장안길 97-4, (남리)", lat: 36.59605391, lon: 127.3009235, population: 550, accidents: 5 },
+      { name: "대평시장", address: "세종특별자치시 금남면 대평시장1길 12", lat: 36.4665093, lon: 127.2820502, population: 300, accidents: 2 },
+      { name: "조치원전통시장", address: "세종특별자치시 조치원읍 조치원8길 42", lat: 36.599769, lon: 127.300644, population: 700, accidents: 6 },
+      { name: "도계리 경로당", address: "세종특별자치시 장군면 장기초교길 13", lat: 36.496969, lon: 127.207338, population: 350, accidents: 1 },
+      { name: "미곡1리미곡회관", address: "세종특별자치시 전동면 미륵당2길 5", lat: 36.669233, lon: 127.217044, population: 650, accidents: 3 },
+    ];
+
+    // 지도에 보호구역 표시 및 300m 반경 원 추가
+    zones.forEach((zone, index) => {
+      const marker = L.marker([zone.lat, zone.lon], { icon: customIcon })
+        .addTo(map)
+        .bindPopup(`
+          <b>${zone.name}</b><br>
+          주소: ${zone.address}<br>
+          노인 인구: ${zone.population}명<br>
+          사고 건수: ${zone.accidents}건<br>
+          <a href="/milmaroo_roadview" target="_blank">로드뷰 보기</a><br>
+          <a href="/search" target="_blank">지도 상세 검색</a>
+        `);
+
+      // Add radius circle
+      L.circle([zone.lat, zone.lon], {
+        color: 'blue',
+        fillColor: 'rgba(0, 0, 255, 0.2)',
+        fillOpacity: 0.3,
+        radius: 300,
+      }).addTo(map);
+
+      // Highlight marker on card hover
+      document.getElementById('zone-list').innerHTML += `
+        <div class="col">
+          <div class="card h-100 border-primary shadow-sm zone-card">
+            <div class="card-body">
+              <h5 class="card-title text-primary">${zone.name}</h5>
+              <p class="card-text"><i class="bi bi-geo-alt"></i> 주소: ${zone.address}</p>
+              <p class="card-text"><i class="bi bi-people"></i> 노인 인구: ${zone.population}명</p>
+              <p class="card-text"><i class="bi bi-exclamation-circle"></i> 사고 건수: ${zone.accidents}건</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.querySelectorAll('.zone-card')[index].addEventListener('mouseover', () => {
+        marker.openPopup();
+      });
+
+      document.querySelectorAll('.zone-card')[index].addEventListener('mouseout', () => {
+        marker.closePopup();
+      });
+
+      marker.on('click', () => {
+        const card = document.querySelectorAll('.zone-card')[index];
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.classList.add('highlight');
+        setTimeout(() => card.classList.remove('highlight'), 2000);
+      });
+    });
+
+    // 사고다발지역 데이터
+const accidentZones = [
+  { name: "조치원읍 (- 인근)", lat: 36.601594, lon: 127.298955 },
+  { name: "조치원재래시장 인근", lat: 36.601157, lon: 127.297224 },
+  { name: "조치원읍(- 인근)", lat: 36.601711, lon: 127.298367 },
+  { name: "조치원읍(- 인근)", lat: 36.599825, lon: 127.298440 },
+  { name: "종촌동(종촌초교 부근)", lat: 36.505096, lon: 127.243270 },
+];
+
+// 사고다발지역 마커 추가
+accidentZones.forEach((zone) => {
+  const marker = L.marker([zone.lat, zone.lon], {
+    icon: L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/128/17093/17093617.png', // 사고 지역 아이콘 URL
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+      popupAnchor: [0, -30],
+    }),
+  }).addTo(map);
+
+  marker.bindPopup(`
+    <b>${zone.name}</b><br>
+    사고다발 지역
+  `);
+});
+
+    // Search functionality
+    document.getElementById('search-btn').addEventListener('click', () => {
+      const query = document.getElementById('search').value.trim();
+      const result = zones.find(zone => zone.name.includes(query) || zone.address.includes(query));
+      if (result) {
+        map.setView([result.lat, result.lon], 14);
+        const marker = L.marker([result.lat, result.lon], { icon: customIcon }).addTo(map);
+        marker.bindPopup(`<b>${result.name}</b><br>주소: ${result.address}`).openPopup();
+      } else {
+        alert('검색 결과가 없습니다.');
+      }
+    });
+
+    // Dark mode toggle
+    document.getElementById('toggle-dark-mode').addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+    });
+  </script>
+</body>
+</html>
