@@ -95,9 +95,9 @@
 <body>
   <!-- 네비게이션 바 추가 -->
   <div class="nav-bar">
-    <a href="index.html">메인으로</a>
-    <a href="search.html">검색</a>
-    <a href="roadview_search.html">로드뷰</a>
+    <a href="{{ url_for('home') }}">
+    <a href="{{ url_for('search') }}">
+    <a href="{{ url_for('roadview') }}">
   </div>
 
   <!-- 사이드바 -->
