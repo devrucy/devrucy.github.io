@@ -4,45 +4,106 @@
     <meta charset="utf-8">
     <title>로드뷰</title>
     <style>
-    .map_wrap {overflow:hidden;height:330px;}
-    .search_bar {margin-bottom: 10px;}
+        /* 네비게이션 스타일 */
+        .navigation {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .navigation a {
+            text-decoration: none;
+            color: #333;
+            margin: 0 10px;
+            padding: 5px 10px;
+            border-radius: 3px;
+        }
+
+        .navigation a:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* 기존 스타일 */
+        .map_wrap {
+            overflow:hidden;
+            height:330px;
+            margin-top: 60px;  /* 네비게이션 바를 위한 여백 */
+        }
+        .search_bar {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .search_bar input {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            margin-right: 5px;
+        }
+        .search_bar button {
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .search_bar button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
+<!-- 네비게이션 바 -->
+<div class="navigation">
+    <a href="index.html">메인으로</a>
+    <a href="page.html">지도</a>
+    <a href="search.html">검색</a>
+</div>
+
 <div class="search_bar">
-    <input type="text" id="keyword" placeholder="주소 또는 건물명을 입력하세요" style="width: 300px;">
+    <input type="text" id="keyword" placeholder="세종시 주소를 입력하세요" style="width: 300px;">
     <button onclick="searchKeyword()">검색</button>
 </div>
+
 <div class="map_wrap">
     <div id="mapWrapper" style="width:50%;height:1000px;float:left">
-        <div id="map" style="width:100%;height:100%"></div> <!-- 지도를 표시할 div -->
+        <div id="map" style="width:100%;height:100%"></div>
     </div>
     <div id="rvWrapper" style="width:50%;height:1000px;float:left">
-        <div id="roadview" style="width:100%;height:100%"></div> <!-- 로드뷰를 표시할 div -->
+        <div id="roadview" style="width:100%;height:100%"></div>
     </div>
 </div>
 
-<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a9c49f4393b0d71166c3ddb8e129041a&libraries=services,places"></script>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=a9c49f4393b0d71166c3ddb8e129041a&libraries=services,places"></script>
 <script>
-var mapWrapper = document.getElementById('mapWrapper'); // 지도를 감싸고 있는 DIV태그
-var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
-    mapCenter = new kakao.maps.LatLng(36.5097417500028, 127.259151638899), // 지도의 가운데 좌표
+var mapWrapper = document.getElementById('mapWrapper');
+var mapContainer = document.getElementById('map'),
+    mapCenter = new kakao.maps.LatLng(36.5097417500028, 127.259151638899), // 세종시 중심좌표
     mapOption = {
-        center: mapCenter, // 지도의 중심좌표
-        level: 3 // 지도의 확대 레벨
+        center: mapCenter,
+        level: 3
     };
 
-// 지도를 표시할 div와 지도 옵션으로 지도를 생성합니다
 var map = new kakao.maps.Map(mapContainer, mapOption);
-map.addOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW); // 지도 위에 로드뷰 도로 올리기
+map.addOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW);
 
-var rvContainer = document.getElementById('roadview'); // 로드뷰를 표시할 div
-var rv = new kakao.maps.Roadview(rvContainer); // 로드뷰 객체
-var rvClient = new kakao.maps.RoadviewClient(); // 좌표로부터 로드뷰 파노ID를 가져올 로드뷰 helper객체
+var rvContainer = document.getElementById('roadview');
+var rv = new kakao.maps.Roadview(rvContainer);
+var rvClient = new kakao.maps.RoadviewClient();
 
 toggleRoadview(mapCenter);
 
-// 마커 이미지를 생성합니다.
 var markImage = new kakao.maps.MarkerImage(
     'https://t1.daumcdn.net/localimg/localimages/07/2018/pc/roadview_minimap_wk_2018.png',
     new kakao.maps.Size(26, 46),
@@ -53,7 +114,6 @@ var markImage = new kakao.maps.MarkerImage(
     }
 );
 
-// 드래그가 가능한 마커를 생성합니다.
 var rvMarker = new kakao.maps.Marker({
     image: markImage,
     position: mapCenter,
@@ -61,20 +121,19 @@ var rvMarker = new kakao.maps.Marker({
     map: map
 });
 
-// 마커에 dragend 이벤트를 할당합니다
+// 마커에 dragend 이벤트 추가
 kakao.maps.event.addListener(rvMarker, 'dragend', function(mouseEvent) {
-    var position = rvMarker.getPosition(); // 현재 마커가 놓인 자리의 좌표
-    toggleRoadview(position); // 로드뷰를 토글합니다
+    var position = rvMarker.getPosition();
+    toggleRoadview(position);
 });
 
-// 지도에 클릭 이벤트를 할당합니다
+// 지도에 클릭 이벤트 추가
 kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
-    var position = mouseEvent.latLng; 
+    var position = mouseEvent.latLng;
     rvMarker.setPosition(position);
     toggleRoadview(position);
 });
 
-// 로드뷰 toggle 함수
 function toggleRoadview(position) {
     rvClient.getNearestPanoId(position, 50, function(panoId) {
         if (panoId === null) {
@@ -91,28 +150,31 @@ function toggleRoadview(position) {
     });
 }
 
-// 키워드 검색 기능 추가
 var places = new kakao.maps.services.Places();
 
 function searchKeyword() {
     var keyword = document.getElementById('keyword').value;
     if (!keyword.trim()) {
-        alert("주소 또는 건물명을 입력하세요.");
+        alert("주소를 입력하세요.");
         return;
     }
     places.keywordSearch(keyword, function(result, status) {
         if (status === kakao.maps.services.Status.OK) {
-            // 검색 결과에서 첫 번째 장소 선택
             var coords = new kakao.maps.LatLng(result[0].y, result[0].x);
             map.setCenter(coords);
             rvMarker.setPosition(coords);
             toggleRoadview(coords);
         } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
-            alert("검색 결과가 없습니다. 다른 키워드를 입력해 보세요.");
+            alert("검색 결과가 없습니다.");
         } else {
-            alert("검색 중 오류가 발생했습니다. 다시 시도해 주세요.");
+            alert("검색 중 오류가 발생했습니다.");
         }
     });
+}
+
+// 초기 로드뷰 위치를 세종시 중심으로 설정
+window.onload = function() {
+    toggleRoadview(mapCenter);
 }
 </script>
 </body>
