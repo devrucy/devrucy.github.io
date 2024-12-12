@@ -70,9 +70,9 @@
 <body>
 <!-- 네비게이션 바 추가 -->
 <div class="navigation">
-    <a href="index.html">메인으로</a>
-    <a href="page.html">지도</a>
-    <a href="roadview_search.html">로드뷰</a>
+    <a href="{{ url_for('home') }}">
+    <a href="{{ url_for('page') }}">
+    <a href="{{ url_for('roadview') }}">
 </div>
 
 <div class="map_wrap">
