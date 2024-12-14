@@ -1,8 +1,14 @@
 from flask import Flask, render_template, jsonify
 from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 CORS(app)
+
+# SQLAlchemy 데이터베이스 설정
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:1234@localhost/sejong_protected_zone'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
 # 세종시 보호구역 데이터
 zones = [
@@ -67,6 +73,11 @@ def roadview():
 @app.route('/api/zones')
 def get_zones():
     return jsonify(zones)
+
+#지도타입바꾸기기
+@app.route('/traffic')
+def traffic():
+    return render_template('traffic.html')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
