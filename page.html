@@ -224,30 +224,30 @@
     });
 
     
-  // 레이어  버튼 커스텀 컨트롤 생성
-  const LayerButtonControl = L.Control.extend({
-    options: {
-      position: 'topright', // 버튼 위치 (좌측 상단)
-    },
-    onAdd: function () {
-      // 버튼 생성
-      const container = L.DomUtil.create('button', 'leaflet-bar leaflet-control leaflet-control-custom');
-      container.innerHTML = '<i class="bi bi-layers"></i>'; // 아이콘 (Bootstrap 사용)
-      container.title = "레이어변경";
-      container.style.backgroundColor = 'lightyellow';
-      container.style.width = '40px';
-      container.style.height = '40px';
-      container.style.cursor = 'pointer';
+   // 레이어  버튼 커스텀 컨트롤 생성
+   const LayerButtonControl = L.Control.extend({
+     options: {
+       position: 'topright', // 버튼 위치 (좌측 상단)
+     },
+     onAdd: function () {
+       // 버튼 생성
+       const container = L.DomUtil.create('button', 'leaflet-bar leaflet-control leaflet-control-custom');
+       container.innerHTML = '<i class="bi bi-layers"></i>'; // 아이콘 (Bootstrap 사용)
+       container.title = "레이어변경";
+       container.style.backgroundColor = 'lightyellow';
+       container.style.width = '40px';
+       container.style.height = '40px';
+       container.style.cursor = 'pointer';
 
-      // 버튼 클릭 이벤트 추가
-      container.onclick = function () {
-        const searchURL = '/traffic'; // 검색 결과 페이지 URL
-        window.open(searchURL, 'traffic.html'); // 새 창 열기
-      };
+       // 버튼 클릭 이벤트 추가
+       container.onclick = function () {
+         const searchURL = '/traffic'; // 검색 결과 페이지 URL
+         window.open(searchURL, 'traffic.html'); // 새 창 열기
+       };
 
-      return container;
-    },
-  });
+       return container;
+     },
+   });
 
     // 버튼 추가
     map.addControl(new SearchButtonControl());
