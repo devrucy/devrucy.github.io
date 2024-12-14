@@ -241,9 +241,8 @@
 
        // 버튼 클릭 이벤트 추가
        container.onclick = function () {
-         const searchURL = '/traffic'; // 검색 결과 페이지 URL
-         window.open(searchURL, 'traffic.html'); // 새 창 열기
-       };
+          window.location.href = 'traffic.html';
+        };
 
        return container;
      },
@@ -252,9 +251,7 @@
     // 버튼 추가
     map.addControl(new SearchButtonControl());
     map.addControl(new RoadviewButtonControl());
-    // 세 번째 버튼 추가
-    const LayerButton = new LayerButtonControl();
-    map.addControl(LayerButton);
+    map.addControl(new LayerButtonControl());
 
     // 버튼 동작 정의
     const actions = [
