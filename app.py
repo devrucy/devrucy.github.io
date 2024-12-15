@@ -74,5 +74,10 @@ def roadview():
 def get_zones():
     return jsonify(zones)
 
+# 검색 페이지 렌더링
+@app.route('/traffic')
+def traffic():
+    return render_template('traffic.html')
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
