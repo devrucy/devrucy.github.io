@@ -74,10 +74,5 @@ def roadview():
 def get_zones():
     return jsonify(zones)
 
-#지도타입바꾸기기
-@app.route('/traffic')
-def traffic():
-    return render_template('traffic.html')
-
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
