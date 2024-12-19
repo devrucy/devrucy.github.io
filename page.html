@@ -15,7 +15,7 @@
     }
 
     #map {
-      height: 100vh;
+      height: 100vh; /* 화면 전체에 지도 표시 */
       margin: 0;
     }
 
@@ -51,7 +51,6 @@
 
     .side-bar-wrapper ul > li > a:hover {
       background-color: #555;
-      color: white;
     }
 
     .toggle-btn {
@@ -67,47 +66,27 @@
       z-index: 1000;
     }
 
-    /* 네비게이션 바 스타일 추가 */
-    .nav-bar {
+    .dropdown-container {
       position: fixed;
       top: 20px;
-      right: 20px;
+      left: 200px; /* 왼쪽에서의 위치를 제거하고 오른쪽 위치를 설정 */
+      z-index: 1000;
       background-color: white;
       padding: 10px;
       border-radius: 5px;
-      z-index: 1000;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    .nav-bar a {
-      text-decoration: none;
-      color: #333;
-      margin: 0 10px;
-      padding: 5px 10px;
-      border-radius: 3px;
-    }
-
-    .nav-bar a:hover {
-      background-color: #f0f0f0;
-    }
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
   </style>
 </head>
 <body>
-  <!-- 네비게이션 바 추가 -->
-  <div class="nav-bar">
-    <a href="{{ url_for('home') }}">
-    <a href="{{ url_for('search') }}">
-    <a href="{{ url_for('roadview') }}">
-  </div>
-
   <!-- 사이드바 -->
   <div id="sideBar" class="side-bar-wrapper">
     <ul>
       <li><a href="#" onclick="scrollToSection('map')">지도 보기</a></li>
-      <li><a href="index.html">메인으로</a></li>
-      <li><a href="search.html">검색</a></li>
+      <li><a href="#">설정</a></li>
+      <li><a href="#">도움말</a></li>
       <li>
-        <h5 style="color: black; margin-left: 10px;">레이어 선택</h5>
+        <h5 style="color: white; margin-left: 10px;">레이어 선택</h5>
         <button id="children-zone-btn" class="btn btn-primary" style="margin: 5px;">어린이 보호구역</button>
         <button id="elderly-zone-btn" class="btn btn-success" style="margin: 5px;">노인 보호구역</button>
         <button id="optimal-zone-btn" class="btn btn-danger" style="margin: 5px;">최적지 선정 구역</button>
@@ -115,12 +94,35 @@
     </ul>
   </div>
 
+  <!-- 드롭다운 메뉴 -->
+  <div class="dropdown-container">
+    <div class="mb-3">
+      <label for="regionSelect" class="form-label">지역 선택</label>
+      <label for="regionSelect" class="form-label">지역 선택</label>
+      <select id="regionSelect" class="form-select">
+        <option value="default" selected>지역을 선택하세요</option>
+        <option value="DBSCAN">DBSCAN</option>
+        <option value="AHP">AHP</option>
+      </select>
+    </div>
+    <div>
+      <label for="layerSelect" class="form-label">레이어 선택</label>
+      <select id="layerSelect" class="form-select">
+        <option value="default" selected>레이어를 선택하세요</option>
+        <option value="children-zone">어린이 보호구역</option>
+        <option value="elderly-zone">노인 보호구역</option>
+        <option value="optimal-zone">최적지 선정</option>
+      </select>
+    </div>
+  </div>
+
   <!-- 토글 버튼 -->
   <button class="toggle-btn" id="toggleBtn">&#9776; 메뉴</button>
 
   <!-- 지도 -->
   <div id="map"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
   <script>
     // 지도 초기화
     const map = L.map('map').setView([36.50972725, 127.2591418], 12);
@@ -128,234 +130,101 @@
       attribution: '&copy; OpenStreetMap contributors',
     }).addTo(map);
 
-    // zones 데이터 정의
-    const zones = [
-        { 
-            name: "Zone 1", 
-            lat: 36.528872, 
-            lon: 127.367796, 
-            address: "세종시 고운동", 
-            population: 1200, 
-            accidents: 3 
-        },
-        {
-            name: "Zone 2", 
-            lat: 36.464646, 
-            lon: 127.280006, 
-            address: "세종시 아름동", 
-            population: 800, 
-            accidents: 5 
-        },
-        { 
-            name: "Zone 3", 
-            lat: 36.679749, 
-            lon: 127.205951, 
-            address: "세종시 반곡동", 
-            population: 950, 
-            accidents: 2 
-        },
-        { 
-            name: "Zone 4", 
-            lat: 36.562973, 
-            lon: 127.283338, 
-            address: "세종시 도담동", 
-            population: 1100, 
-            accidents: 4 
-        },
-        { 
-            name: "Zone 5", 
-            lat: 36.722422, 
-            lon: 127.157880, 
-            address: "세종시 소담동", 
-            population: 650, 
-            accidents: 1 
-        }
-    ];
-
-    // 사이드바 토글 기능
+    // 사이드바 토글
     document.getElementById('toggleBtn').addEventListener('click', () => {
       const sideBar = document.getElementById('sideBar');
       const leftPosition = sideBar.style.left === '0px' ? '-250px' : '0px';
       sideBar.style.left = leftPosition;
     });
 
-    // 검색 버튼 컨트롤
-    const SearchButtonControl = L.Control.extend({
-      options: {
-        position: 'topright'
+    // 우측 버튼 추가 (총 7개 유지)
+    const CustomButtonControl = L.Control.extend({
+      options: { position: 'topright' },
+      initialize: function (icon, color, link) {
+        this.icon = icon;
+        this.color = color;
+        this.link = link;
       },
       onAdd: function () {
         const container = L.DomUtil.create('button', 'leaflet-bar leaflet-control leaflet-control-custom');
-        container.innerHTML = '<i class="bi bi-search"></i>';
-        container.title = "검색하기";
-        container.style.backgroundColor = 'white';
+        container.innerHTML = `<i class="${this.icon}"></i>`;
+        container.style.backgroundColor = this.color;
         container.style.width = '40px';
         container.style.height = '40px';
         container.style.cursor = 'pointer';
-
-        container.onclick = function () {
-          window.location.href = 'search.html';
+        container.onclick = () => {
+          window.open(this.link, '_blank');
         };
-
         return container;
       },
     });
 
-    // 로드뷰 버튼 컨트롤
-    const RoadviewButtonControl = L.Control.extend({
-      options: {
-        position: 'topright'
-      },
-      onAdd: function () {
-        const container = L.DomUtil.create('button', 'leaflet-bar leaflet-control leaflet-control-custom');
-        container.innerHTML = '<i class="bi bi-eye"></i>';
-        container.title = "로드뷰 보기";
-        container.style.backgroundColor = 'white';
-        container.style.width = '40px';
-        container.style.height = '40px';
-        container.style.cursor = 'pointer';
-
-        container.onclick = function () {
-          window.location.href = 'roadview_search.html';
-        };
-
-        return container;
-      },
-    });
-
-    
-   // 레이어  버튼 커스텀 컨트롤 생성
-    const LayerButtonControl = L.Control.extend({
-      options: {
-        position: 'topright', // 버튼 위치 (좌측 상단)
-      },
-      onAdd: function () {
-        // 버튼 생성
-        const container = L.DomUtil.create('button', 'leaflet-bar leaflet-control leaflet-control-custom');
-        container.innerHTML = '<i class="bi bi-layers"></i>'; // 아이콘 (Bootstrap 사용)
-        container.title = "레이어변경";
-        container.style.backgroundColor = 'lightyellow';
-        container.style.width = '40px';
-        container.style.height = '40px';
-        container.style.cursor = 'pointer';
-
-        // 버튼 클릭 이벤트 추가
-        container.onclick = function () {
-           window.location.href = 'traffic.html';
-         };
-
-        return container;
-      },
-    });
-
-    // 버튼 추가
-    map.addControl(new SearchButtonControl());
-    map.addControl(new RoadviewButtonControl());
-    map.addControl(new LayerButtonControl());
-
-    // 버튼 동작 정의
-    const actions = [
-      {
-        text: '<i class="bi bi-info-circle"></i>',
-        color: 'lightblue',
-        callback: () => alert('노인보호구역 정보를 확인하세요.'),
-      },
-      {
-        text: '<i class="bi bi-map"></i>',
-        color: 'lightgreen',
-        callback: () => map.setView([36.50972725, 127.2591418], 13),
-      },
-      {
-        text: '<i class="bi bi-geo-alt"></i>',
-        color: 'lightpink',
-        callback: () => map.locate({ setView: true, maxZoom: 15 }),
-      }
+    const buttonConfigs = [
+      { icon: 'bi bi-search', color: 'white', link: '/search.html' },
+      { icon: 'bi bi-eye', color: 'lightpink', link: '/roadview_search.html' },
+      { icon: 'bi bi-layers', color: 'lightyellow', link: '/traffic.html' },
+      { icon: 'bi bi-geo-alt', color: 'lightgreen', link: '/location.html' },
+      { icon: 'bi bi-map', color: 'skyblue', link: '/map.html' },
     ];
 
-    // 추가 버튼 컨트롤 생성
-    const CustomButtonControl = L.Control.extend({
-      options: {
-        position: 'topright'
-      },
-      initialize: function (text, color, callback) {
-        this.text = text;
-        this.color = color;
-        this.callback = callback;
-      },
-      onAdd: function () {
-        const container = L.DomUtil.create('button', 'leaflet-bar leaflet-control leaflet-control-custom');
-        container.innerHTML = this.text;
-        container.style.backgroundColor = this.color;
-        container.style.border = 'none';
-        container.style.width = '40px';
-        container.style.height = '40px';
-        container.style.cursor = 'pointer';
-
-        L.DomEvent.on(container, 'click', this.callback);
-        return container;
-      },
+    buttonConfigs.forEach(config => {
+      map.addControl(new CustomButtonControl(config.icon, config.color, config.link));
     });
 
-    // 버튼 추가
-    actions.forEach(action => {
-      map.addControl(new CustomButtonControl(action.text, action.color, action.callback));
+    // 마커 그룹
+    const markerGroup = L.layerGroup().addTo(map);
+
+    // DBSCAN 데이터
+    const clusterData = [
+      { lat: 36.528835, lon: 127.368141, address: "세종특별자치시 부강면 부강리 464-4" },
+      { lat: 36.464523, lon: 127.280050, address: "세종특별자치시 금남면 용포리 124" },
+      { lat: 36.680030, lon: 127.206199, address: "세종특별자치시 전의면 동교리 196-2" },
+      { lat: 36.562657, lon: 127.283087, address: "세종특별자치시 연서면 봉암리 215-7" },
+      { lat: 36.721783, lon: 127.157707, address: "세종특별자치시 소정면 소정리 49-2" }
+    ];
+
+    // AHP 데이터
+    const ahpData = [
+      { lat: 36.544355, lon: 127.274331, address: "세종특별자치시 연기면 아사디길 20" },
+      { lat: 36.543717, lon: 127.246965, address: "세종특별자치시 연기면 외왕길 7" },
+      { lat: 36.551629, lon: 127.282836, address: "세종특별자치시 연기면 잣띠길 58-2" },
+      { lat: 36.544188, lon: 127.275737, address: "세종특별자치시 연기면 당산로 113-5" },
+      { lat: 36.544291, lon: 127.258017, address: "세종특별자치시 연기면 원왕길 8-3" }
+    ];
+
+    // 드롭다운 이벤트
+    document.getElementById("regionSelect").addEventListener("change", function () {
+      const value = this.value;
+
+      // 마커 그룹 초기화
+      markerGroup.clearLayers();
+
+      if (value === "DBSCAN") {
+        clusterData.forEach(location => {
+          const marker = L.marker([location.lat, location.lon]).addTo(markerGroup);
+          marker.bindPopup(`<b>주소:</b> ${location.address}`).openPopup();
+        });
+      } else if (value === "AHP") {
+        ahpData.forEach(location => {
+          const marker = L.marker([location.lat, location.lon]).addTo(markerGroup);
+          marker.bindPopup(`<b>주소:</b> ${location.address}`).openPopup();
+        });
+      }
+    });
+    document.getElementById("layerSelect").addEventListener("change", function () {
+      const layerMap = {
+        "children-zone": "children-zone-btn",
+        "elderly-zone": "elderly-zone-btn",
+        "optimal-zone": "optimal-zone-btn",
+      };
+      const value = this.value;
+      if (value !== "default") document.getElementById(layerMap[value]).click();
     });
 
-    // 모든 위치에 마커 생성
-    const markers = zones.map(zone => {
-        const marker = L.marker([zone.lat, zone.lon], {
-            icon: L.icon({
-                iconUrl: 'https://cdn-icons-png.flaticon.com/512/854/854866.png',
-                iconSize: [30, 30],
-            })
-        }).addTo(map)
-        .bindPopup(`
-            <b>${zone.name}</b><br>
-            주소: ${zone.address}<br>
-            노인 인구: ${zone.population}명<br>
-            사고 건수: ${zone.accidents}건<br>
-            <a href="roadview_search.html">로드뷰 보기</a>
-        `);
-
-        // 각 위치에 서클 표시
-        L.circle([zone.lat, zone.lon], {
-            color: 'blue',
-            fillColor: 'rgba(0, 0, 255, 0.3)',
-            fillOpacity: 0.2,
-            radius: 300,
-        }).addTo(map);
-
-        return marker;
-    });
-
-    function handleLayerClick(layerId) {
-      // 기존 레이어 및 마커 제거
-      map.eachLayer(layer => {
-        if (layer.options && layer.options.customLayer) {
-          map.removeLayer(layer);
-        }
-      });
-
-      // 새로운 레이어 추가
-      zones.forEach(zone => {
-        const color = layerId === 'children-zone-btn' ? 'lightblue' : 
-                     layerId === 'elderly-zone-btn' ? 'orange' : 'pink';
-                     
-        L.circle([zone.lat, zone.lon], {
-            color: color,
-            fillColor: color,
-            fillOpacity: 0.2,
-            radius: 300,
-            customLayer: true
-        }).addTo(map);
-      });
+    function scrollToSection(id) {
+      const section = document.getElementById(id);
+      if (section) section.scrollIntoView({ behavior: 'smooth' });
     }
-
-    // 레이어 버튼 이벤트 리스너 추가
-    document.getElementById('children-zone-btn').addEventListener('click', () => handleLayerClick('children-zone-btn'));
-    document.getElementById('elderly-zone-btn').addEventListener('click', () => handleLayerClick('elderly-zone-btn'));
-    document.getElementById('optimal-zone-btn').addEventListener('click', () => handleLayerClick('optimal-zone-btn'));
-
   </script>
 </body>
 </html>
