@@ -79,5 +79,9 @@ def get_zones():
 def traffic():
     return render_template('traffic.html')
 
+@app.route('/dbscan')
+def dbscan():
+    return render_template('dbscan.html')
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
