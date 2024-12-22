@@ -93,6 +93,7 @@
               <option value="DBSCAN">DBSCAN</option>
               <option value="AHP">AHP</option>
               <option value="custom-analysis">DBSCAN분석</option>
+              <option value="clustering">Clustering</option>
             </select>
           </div>
           <div>
@@ -200,9 +201,10 @@
           marker.bindPopup(`<b>주소:</b> ${location.address}`).openPopup();
         });
       } else if (value === "custom-analysis") {
-        window.open('/dbscan.html', '_blank');
-      }
-    });
+    window.open('/dbscan.html', '_blank');
+  } else if (value === "clustering") {
+    window.open('/clusturing.html', '_blank');
+  }
 
     function scrollToSection(id) {
       const section = document.getElementById(id);
