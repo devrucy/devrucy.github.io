@@ -83,5 +83,9 @@ def traffic():
 def dbscan():
     return render_template('dbscan.html')
 
+@app.route('/clusturing')
+def dbscan():
+    return render_template('clusturing.html')
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
