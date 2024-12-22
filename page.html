@@ -70,6 +70,12 @@
     .dropdown-container {
       margin: 10px 10px 20px 10px;
     }
+
+    .leaflet-control-custom {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
   </style>
 </head>
 <body>
@@ -86,6 +92,7 @@
               <option value="default" selected>분석을 선택하세요</option>
               <option value="DBSCAN">DBSCAN</option>
               <option value="AHP">AHP</option>
+              <option value="custom-analysis">사용자 정의 분석</option>
             </select>
           </div>
           <div>
@@ -124,13 +131,6 @@
 
     const customIcon = L.icon({
       iconUrl: 'https://cdn-icons-png.flaticon.com/128/5693/5693843.png',
-      iconSize: [32, 32],
-      iconAnchor: [16, 32],
-      popupAnchor: [0, -32]
-    });
-
-    const childrenZoneIcon = L.icon({
-      iconUrl: 'https://cdn-icons-png.flaticon.com/128/5693/5693821.png',
       iconSize: [32, 32],
       iconAnchor: [16, 32],
       popupAnchor: [0, -32]
@@ -199,40 +199,8 @@
           const marker = L.marker([location.lat, location.lon], { icon: customIcon }).addTo(markerGroup);
           marker.bindPopup(`<b>주소:</b> ${location.address}`).openPopup();
         });
-      }
-    });
-
-    function loadChildrenZoneMarkers(csvFilePath) {
-      markerGroup.clearLayers();
-
-      Papa.parse(csvFilePath, {
-        download: true,
-        header: true,
-        complete: function (results) {
-          const data = results.data;
-
-          data.forEach(zone => {
-            if (zone['위도'] && zone['경도']) {
-              const lat = parseFloat(zone['위도']);
-              const lon = parseFloat(zone['경도']);
-              const marker = L.marker([lat, lon], { icon: customIcon }).addTo(markerGroup);
-              marker.bindPopup(`<b>어린이 보호구역</b><br>주소: ${zone['주소'] || '정보 없음'}`);
-            }
-          });
-        },
-        error: function (error) {
-          console.error("CSV 파일 로드 오류:", error);
-        }
-      });
-    }
-
-    document.getElementById("layerSelect").addEventListener("change", function () {
-      const value = this.value;
-
-      if (value === "children-zone") {
-        loadChildrenZoneMarkers('/data/세종특별자치시_어린이보호구역_공공데이터포털.csv');
-      } else {
-        markerGroup.clearLayers();
+      } else if (value === "custom-analysis") {
+        window.open('/dbscan.html', '_blank');
       }
     });
 
